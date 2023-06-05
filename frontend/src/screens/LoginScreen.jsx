@@ -6,6 +6,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { useLoginMutation } from '../slices/usersApiSlice.js'
 import { setCredentials } from '../slices/authSlice'
 import { toast } from 'react-toastify'
+import Loader from '../components/Loader'
 
 function LoginScreen() {
     const [email, setEmail] = useState('')
@@ -30,8 +31,13 @@ function LoginScreen() {
             const res = await login({ email, password }).unwrap()
             dispatch(setCredentials({...res}))
             navigate('/')
+            toast.success('You are successfully logged in', {
+                autoClose: 2000,
+            })
         } catch (error) {
-            toast.log(error.data.message || error.error)
+            toast.error(error.data.message || error.error ,{
+                autoClose: 2000,
+            })
         }
     }
 
@@ -59,6 +65,9 @@ function LoginScreen() {
                         onChange={ (e) => setPassword(e.target.value) }
                     ></Form.Control>
                 </Form.Group>
+
+                { isLoading  && <Loader />}
+
                 <Button type='submit' variant='primary' className='mt-3'>
                     Sign In
                 </Button>

@@ -1,7 +1,14 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Form, Button, Row, Col } from 'react-bootstrap'
 import FormContainer from '../components/FormContainer'
+import { useDispatch, useSelector } from 'react-redux'
+import { toast } from 'react-toastify'
+import Loader from '../components/Loader'
+import { useRegisterMutation } from '../slices/usersApiSlice'
+import { setCredentials } from '../slices/authSlice'
+import { useNavigate } from 'react-router-dom'
+
 
 function RegisterScreen() {
     const [name, setName] = useState('')
@@ -9,9 +16,33 @@ function RegisterScreen() {
     const [password, setPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
 
+    const navigate = useNavigate()
+    const dispatch = useDispatch()
+    const { userInfo } = useSelector((state) => state.auth)
+    const [register, { isLoading }] = useRegisterMutation()
+
+    useEffect(() => {
+        if (userInfo) {
+            navigate('/')
+        }
+    }, [navigate, userInfo])
+
+
     const submitHandler = async (e) => {
         e.preventDefault()
-        console.log('submit')
+        if (password !== confirmPassword) {
+            toast.error('Passwords do not match')
+        } else {
+            try {
+                const res = await register({ name, email, password }).unwrap()
+                dispatch(setCredentials({...res}))
+                navigate('/')
+            } catch (error) {
+                toast.error(error.data.message || error.error ,{
+                    autoClose: 2000,
+                })
+            }
+        }
     }
 
     return (
@@ -25,6 +56,16 @@ function RegisterScreen() {
                         placeholder='Enter Name'
                         value={name}
                         onChange={ (e) => setName(e.target.value) }
+                    ></Form.Control>
+                </Form.Group>
+
+                <Form.Group className='my-2' controlId='email'>
+                    <Form.Label>Email</Form.Label>
+                    <Form.Control
+                        type='email'
+                        placeholder='Enter Email'
+                        value={email}
+                        onChange={ (e) => setEmail(e.target.value) }
                     ></Form.Control>
                 </Form.Group>
 
@@ -47,9 +88,12 @@ function RegisterScreen() {
                         onChange={ (e) => setConfirmPassword(e.target.value) }
                     ></Form.Control>
                 </Form.Group>
+                { isLoading && <Loader />}
+
                 <Button type='submit' variant='primary' className='mt-3'>
-                    Sign In
+                    Sign Up
                 </Button>
+
 
                 <Row className='py-3'>
                     <Col>
